@@ -10,6 +10,17 @@ data class Point(val latitude: Double, val longitude: Double) {
     }
 }
 
+const val DEFAULT_PICKUP_NAME = "Lokasi jemput"
+const val DEFAULT_DROPOFF_NAME = "Lokasi tujuan"
+
+data class PlaceResult(val name: String, val displayName: String, val point: Point) {
+    companion object {
+        fun from(json: JSONObject) = PlaceResult(
+            json.getString("name"), json.getString("displayName"), Point.from(json.getJSONObject("point"))
+        )
+    }
+}
+
 data class Ride(
     val id: String,
     val status: String,
@@ -17,7 +28,9 @@ data class Ride(
     val dropoff: Point,
     val route: List<Point>,
     val driverName: String,
-    val driverPlate: String
+    val driverPlate: String,
+    val pickupName: String = DEFAULT_PICKUP_NAME,
+    val dropoffName: String = DEFAULT_DROPOFF_NAME
 ) {
     companion object {
         fun from(json: JSONObject) = Ride(
@@ -26,7 +39,9 @@ data class Ride(
             json.optJSONArray("route")?.let { points ->
                 List(points.length()) { index -> Point.from(points.getJSONObject(index)) }
             } ?: emptyList(),
-            json.getString("driverName"), json.getString("driverPlate")
+            json.getString("driverName"), json.getString("driverPlate"),
+            json.optString("pickupName").ifBlank { DEFAULT_PICKUP_NAME },
+            json.optString("dropoffName").ifBlank { DEFAULT_DROPOFF_NAME }
         )
     }
 }
