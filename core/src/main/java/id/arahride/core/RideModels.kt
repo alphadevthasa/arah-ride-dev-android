@@ -4,7 +4,6 @@ import org.json.JSONObject
 
 data class Point(val latitude: Double, val longitude: Double) {
     fun json() = JSONObject().put("latitude", latitude).put("longitude", longitude)
-    fun label() = "%.5f, %.5f".format(latitude, longitude)
     companion object {
         fun from(json: JSONObject) = Point(json.getDouble("latitude"), json.getDouble("longitude"))
     }

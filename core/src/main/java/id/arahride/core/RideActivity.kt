@@ -16,6 +16,8 @@ import android.os.Handler
 import android.os.Looper
 import android.view.animation.LinearInterpolator
 import androidx.activity.ComponentActivity
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -51,9 +53,7 @@ abstract class RideActivity : ComponentActivity(), LocationListener {
     private var alive = true
     private var snapshot by mutableStateOf<Snapshot?>(null)
     private var error by mutableStateOf<String?>(null)
-    private var pickup by mutableStateOf(Point(-6.2088, 106.8456))
-    private var dropoff by mutableStateOf(Point(-6.1754, 106.8272))
-    private var selecting by mutableStateOf("pickup")
+    private var place by mutableStateOf(PlaceUiState())
     private val locationManager by lazy { getSystemService(LOCATION_SERVICE) as LocationManager }
     private val driverIcon by lazy {
         val size = (48 * resources.displayMetrics.density).toInt()
@@ -107,17 +107,21 @@ abstract class RideActivity : ComponentActivity(), LocationListener {
             }
             readyMap.addOnMapClickListener { coordinate ->
                 if (role == "customer" && snapshot?.ride == null) {
-                    if (selecting == "pickup") pickup = Point(coordinate.latitude, coordinate.longitude)
-                    else dropoff = Point(coordinate.latitude, coordinate.longitude)
+                    val tapped = Point(coordinate.latitude, coordinate.longitude)
+                    val field = place.selecting
+                    place = place.mapTapped(tapped)
                     refreshMarkers()
+                    reverseLookup(field, tapped)
                 }
                 false
             }
         }
         findViewById<ComposeView>(R.id.header).setContent { RideHeader(role, snapshot) }
         findViewById<ComposeView>(R.id.panel).setContent {
-            RidePanel(role, snapshot, pickup, dropoff, selecting, error,
-                onSelect = { selecting = it }, onAction = ::perform)
+            RidePanel(role, snapshot, place, error,
+                onSelect = { place = place.select(it) },
+                onQueryChange = { place = place.withQuery(it) },
+                onSearch = ::submitSearch, onChoose = ::choosePlace, onAction = ::perform)
         }
         client = RideClient(apiBaseUrl, role)
         client.fetch(::receive, ::fail)
@@ -142,6 +146,36 @@ abstract class RideActivity : ComponentActivity(), LocationListener {
         else if (role == "driver") stopLocation()
     }
 
+    private fun submitSearch() {
+        place = place.beginSearch()
+        if (place.search != SearchState.Loading) return
+        val token = place.searchToken
+        val field = place.selecting
+        val query = place.query.trim()
+        val center = place.activePoint
+        lifecycleScope.launch {
+            try {
+                val places = client.searchPlaces(query, center)
+                place = place.searchSucceeded(token, field, places)
+            } catch (e: java.io.IOException) {
+                place = place.searchFailed(token, field)
+            }
+        }
+    }
+
+    private fun choosePlace(result: PlaceResult) {
+        place = place.choose(result)
+        refreshMarkers()
+        map?.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(result.point.latitude, result.point.longitude), 15.0))
+    }
+
+    private fun reverseLookup(field: String, point: Point) {
+        lifecycleScope.launch {
+            val found = try { client.reverseGeocode(point) } catch (e: java.io.IOException) { null }
+            place = place.reverseResolved(field, point, found)
+        }
+    }
+
     private fun fail(message: String) = runOnUiThread { if (alive) error = message }
 
     private fun perform(action: String) {
@@ -156,8 +190,11 @@ abstract class RideActivity : ComponentActivity(), LocationListener {
             requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), 100)
             return
         }
-        client.action(action, if (action == "create") pickup else null,
-            if (action == "create") dropoff else null, onState = ::receive, onError = ::fail)
+        val creating = action == "create"
+        client.action(action, if (creating) place.pickup else null, if (creating) place.dropoff else null,
+            pickupName = if (creating) place.pickupName else null,
+            dropoffName = if (creating) place.dropoffName else null,
+            onState = ::receive, onError = ::fail)
     }
 
     private fun refreshMarkers() {
@@ -165,7 +202,7 @@ abstract class RideActivity : ComponentActivity(), LocationListener {
         if (!styleReady) return
         val ride = snapshot?.ride
         val points = if (ride != null) listOf("Jemput" to ride.pickup, "Tujuan" to ride.dropoff)
-            else if (role == "customer") listOf("Jemput" to pickup, "Tujuan" to dropoff) else emptyList()
+            else if (role == "customer") listOf("Jemput" to place.pickup, "Tujuan" to place.dropoff) else emptyList()
         val key = points.joinToString("|") { "${it.first}:${it.second.latitude}:${it.second.longitude}" }
         if (key != fixedMarkerKey) {
             fixedMarkers.forEach { readyMap.removeMarker(it) }

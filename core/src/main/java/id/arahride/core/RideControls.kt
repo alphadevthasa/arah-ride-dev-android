@@ -11,6 +11,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -45,8 +50,9 @@ fun RideHeader(role: String, snapshot: Snapshot?) {
 
 @Composable
 fun RidePanel(
-    role: String, snapshot: Snapshot?, pickup: Point, dropoff: Point, selecting: String,
-    error: String?, onSelect: (String) -> Unit, onAction: (String) -> Unit
+    role: String, snapshot: Snapshot?, place: PlaceUiState, error: String?,
+    onSelect: (String) -> Unit, onQueryChange: (String) -> Unit, onSearch: () -> Unit,
+    onChoose: (PlaceResult) -> Unit, onAction: (String) -> Unit
 ) {
     MaterialTheme {
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
@@ -56,7 +62,7 @@ fun RidePanel(
             }
             Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp)) {
                 Column(Modifier.padding(20.dp)) {
-                    if (role == "customer") CustomerContent(snapshot, pickup, dropoff, selecting, onSelect, onAction)
+                    if (role == "customer") CustomerContent(snapshot, place, onSelect, onQueryChange, onSearch, onChoose, onAction)
                     else DriverContent(snapshot, onAction)
                 }
             }
@@ -65,22 +71,25 @@ fun RidePanel(
 }
 
 @Composable
-private fun CustomerContent(snapshot: Snapshot?, pickup: Point, dropoff: Point, selecting: String,
-                            onSelect: (String) -> Unit, onAction: (String) -> Unit) {
+private fun CustomerContent(snapshot: Snapshot?, place: PlaceUiState,
+                            onSelect: (String) -> Unit, onQueryChange: (String) -> Unit, onSearch: () -> Unit,
+                            onChoose: (PlaceResult) -> Unit, onAction: (String) -> Unit) {
+    val selecting = place.selecting
     val ride = snapshot?.ride
     when (ride?.status) {
         null -> {
             Text("Mau ke mana hari ini?", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(12.dp))
-            Text("Ketuk peta untuk memilih titik. Pilih jenis titik dahulu.")
+            Text("Cari alamat atau nama tempat, atau ketuk peta. Pilih jenis titik dahulu.")
             Spacer(Modifier.height(12.dp))
             Row {
                 OutlinedButton(onClick = { onSelect("pickup") }) { Text(if (selecting == "pickup") "● Jemput" else "Jemput") }
                 Spacer(Modifier.width(8.dp))
                 OutlinedButton(onClick = { onSelect("dropoff") }) { Text(if (selecting == "dropoff") "● Tujuan" else "Tujuan") }
             }
-            Text("Jemput: ${pickup.label()}")
-            Text("Tujuan: ${dropoff.label()}")
+            LocationLines(place.pickupName, place.dropoffName)
+            Spacer(Modifier.height(8.dp))
+            PlaceSearch(place, onQueryChange, onSearch, onChoose)
             Spacer(Modifier.height(12.dp))
             Button(onClick = { onAction("create") }, enabled = snapshot?.driverOnline == true,
                 colors = ButtonDefaults.buttonColors(containerColor = Navy), modifier = Modifier.fillMaxWidth()) {
@@ -124,8 +133,7 @@ private fun DriverContent(snapshot: Snapshot?, onAction: (String) -> Unit) {
         }
         "requested" -> {
             Title("Pesanan baru")
-            Text("Jemput: ${ride.pickup.label()}")
-            Text("Tujuan: ${ride.dropoff.label()}")
+            TripPoints(ride)
             ActionButton("Terima pesanan", "accept", onAction)
         }
         "accepted" -> { Title("Menuju penjemputan"); TripPoints(ride); ActionButton("Saya sudah tiba", "arrive", onAction) }
@@ -144,9 +152,40 @@ private fun DriverContent(snapshot: Snapshot?, onAction: (String) -> Unit) {
     Spacer(Modifier.height(8.dp))
 }
 
-@Composable private fun TripPoints(ride: Ride) {
-    Text("Jemput: ${ride.pickup.label()}")
-    Text("Tujuan: ${ride.dropoff.label()}")
+@Composable private fun TripPoints(ride: Ride) = LocationLines(ride.pickupName, ride.dropoffName)
+
+@Composable private fun LocationLines(pickupName: String, dropoffName: String) {
+    locationLines(pickupName, dropoffName).forEach { Text(it) }
+}
+
+@Composable
+private fun PlaceSearch(place: PlaceUiState, onQueryChange: (String) -> Unit, onSearch: () -> Unit, onChoose: (PlaceResult) -> Unit) {
+    val target = if (place.selecting == "pickup") "jemput" else "tujuan"
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        OutlinedTextField(
+            value = place.query, onValueChange = onQueryChange, singleLine = true,
+            label = { Text("Cari titik $target") },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(onSearch = { onSearch() }),
+            modifier = Modifier.weight(1f)
+        )
+        Spacer(Modifier.width(8.dp))
+        Button(onClick = onSearch, colors = ButtonDefaults.buttonColors(containerColor = Navy)) { Text("Cari") }
+    }
+    when (val search = place.search) {
+        SearchState.Idle -> Unit
+        SearchState.Loading -> Text("Mencari…", Modifier.padding(top = 8.dp))
+        SearchState.Empty -> Text(SEARCH_EMPTY_MESSAGE, Modifier.padding(top = 8.dp))
+        is SearchState.Error -> {
+            Text(search.message, Modifier.padding(top = 8.dp), color = Color(0xFF9B1C1C))
+            if (search.message == SEARCH_ERROR_MESSAGE) OutlinedButton(onClick = onSearch) { Text("Coba lagi") }
+        }
+        is SearchState.Results -> Column(Modifier.padding(top = 8.dp)) {
+            search.places.take(8).forEach { result ->
+                Text(result.displayName, Modifier.fillMaxWidth().clickable { onChoose(result) }.padding(vertical = 8.dp))
+            }
+        }
+    }
 }
 
 @Composable private fun ActionButton(label: String, action: String, onAction: (String) -> Unit) {
