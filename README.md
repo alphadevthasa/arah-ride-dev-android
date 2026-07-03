@@ -13,7 +13,7 @@ Pratinjau: [tampilan Driver dengan ikon mobil](docs/live-car.png).
 
 ## Menjalankan
 
-1. Jalankan [server demo Go](../../ArahRideBackend/README.md).
+1. Jalankan [Arah Ride Backend Dev](https://github.com/alphadevthasa/arah-ride-backend-dev).
 2. Buka folder ini di Android Studio; jalankan `customer` dan `driver` pada emulator Android yang sama atau berbeda.
 3. Di Arah Driver, tekan **Mulai online** dan izinkan lokasi. Di Arah, pilih titik jemput dan tujuan dengan mengetuk peta, lalu pesan. Kembali ke Driver untuk menerima hingga selesai.
 4. Untuk build terminal: `./gradlew :customer:assembleDebug :driver:assembleDebug`.
@@ -34,7 +34,7 @@ Status: `requested → accepted → arrived → in_progress → completed`, deng
 
 Server demo hanya mendukung satu Driver dan satu pesanan aktif, tanpa akun, pembayaran, tarif, dispatch multi-driver, navigasi jalan, atau penyimpanan persisten. Titik peta adalah koordinat; belum ada geocoding alamat atau estimasi rute. Sebelum rilis, tambahkan autentikasi, otorisasi per pesanan, database, penyebaran driver, APNs/FCM untuk penawaran saat app tidak aktif, dan endpoint HTTPS. Ganti penyedia tile demo dengan penyedia OSM ber-SLA atau tile server sendiri sesuai beban. Jangan arahkan aplikasi komersial ke server tile publik `tile.openstreetmap.org`.
 
-## Hasil verifikasi pencarian tempat (2026-10-15)
+## Hasil verifikasi pencarian tempat (2026-06-28)
 
 - Otomatis: Android: `./gradlew :core:testDebugUnitTest :customer:assembleDebug :driver:assembleDebug` lulus (19 unit test).
 - Backend dengan Photon palsu lokal (`ARAH_GEOCODER_URL`): `/v1/places/search` dan `/v1/places/reverse` memetakan hasil dengan benar; kata kunci kosong → 400.
