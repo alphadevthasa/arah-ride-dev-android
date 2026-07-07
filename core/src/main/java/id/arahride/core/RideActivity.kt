@@ -51,7 +51,8 @@ abstract class RideActivity : ComponentActivity(), LocationListener {
     private var driverAnimation: ValueAnimator? = null
     private val handler = Handler(Looper.getMainLooper())
     private var alive = true
-    private var snapshot by mutableStateOf<Snapshot?>(null)
+    private var snapshot: Snapshot? = null
+    private var panelSnapshot by mutableStateOf<Snapshot?>(null)
     private var error by mutableStateOf<String?>(null)
     private var place by mutableStateOf(PlaceUiState())
     private val locationManager by lazy { getSystemService(LOCATION_SERVICE) as LocationManager }
@@ -116,9 +117,9 @@ abstract class RideActivity : ComponentActivity(), LocationListener {
                 false
             }
         }
-        findViewById<ComposeView>(R.id.header).setContent { RideHeader(role, snapshot) }
+        findViewById<ComposeView>(R.id.header).setContent { RideHeader(role, panelSnapshot) }
         findViewById<ComposeView>(R.id.panel).setContent {
-            RidePanel(role, snapshot, place, error,
+            RidePanel(role, panelSnapshot, place, error,
                 onSelect = { place = place.select(it) },
                 onQueryChange = { place = place.withQuery(it) },
                 onSearch = ::submitSearch, onChoose = ::choosePlace, onAction = ::perform)
@@ -139,7 +140,11 @@ abstract class RideActivity : ComponentActivity(), LocationListener {
 
     private fun receive(state: Snapshot) = runOnUiThread {
         if (!alive || state.sequence < (snapshot?.sequence ?: -1)) return@runOnUiThread
+        val previous = snapshot
         snapshot = state
+        if (previous == null || previous.driverOnline != state.driverOnline || previous.ride != state.ride) {
+            panelSnapshot = state
+        }
         error = null
         refreshMarkers()
         if (role == "driver" && state.driverOnline && state.ride?.status != "in_progress") startLocation()
@@ -245,7 +250,7 @@ abstract class RideActivity : ComponentActivity(), LocationListener {
             val start = marker.position
             val end = LatLng(target.latitude, target.longitude)
             driverAnimation = ValueAnimator.ofFloat(0f, 1f).apply {
-                duration = 100L
+                duration = 350L
                 interpolator = LinearInterpolator()
                 addUpdateListener { animation ->
                     val fraction = animation.animatedFraction.toDouble()
