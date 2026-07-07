@@ -11,6 +11,12 @@ Peta dapat diperbesar atau diperkecil dengan gestur cubit.
 
 Pratinjau: [tampilan Driver dengan ikon mobil](docs/live-car.png).
 
+## Demo alur pemesanan
+
+GIF berikut merekam alur Customer Android: memilih titik jemput dan tujuan di peta, memesan, lalu mengikuti Driver hingga perjalanan berjalan.
+
+![Alur pemesanan Customer Android](docs/arah-android-booking-flow.gif)
+
 ## Menjalankan
 
 1. Jalankan [Arah Ride Backend Dev](https://github.com/alphadevthasa/arah-ride-backend-dev).
