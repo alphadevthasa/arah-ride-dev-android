@@ -17,6 +17,22 @@ GIF berikut merekam alur Customer Android: memilih titik jemput dan tujuan di pe
 
 ![Alur pemesanan Customer Android](docs/arah-android-booking-flow.gif)
 
+## Versi Production
+
+Aplikasi **Production** punya alur lebih lengkap daripada Dev/Portfolio: login OTP (nomor telepon), pemilihan layanan (Motor/Mobil) dan metode pembayaran (tunai/non-tunai), estimasi tarif, pembayaran non-tunai, rating Driver, dan tip. Repo ini berisi versi **Dev/Portfolio**; berikut cuplikan aplikasi **Customer Production** sebagai gambaran seperti apa versi Production:
+
+![Alur Production Customer Android](docs/arah-production-flow.gif)
+
+## Tech stack
+
+- **Bahasa:** Kotlin
+- **UI:** Jetpack Compose (panel & header) + XML layout (host peta MapLibre)
+- **Peta:** MapLibre Native dengan tile OpenFreeMap (OpenStreetMap)
+- **Networking:** OkHttp — HTTP (REST) dan WebSocket untuk snapshot live
+- **Lokasi:** Android LocationManager + foreground service (Driver)
+- **Build:** Gradle (Kotlin DSL), minSdk 26, targetSdk 35, JDK 17
+- **Modul:** `:core` (model, `RideClient`, panel UI), `:customer`, `:driver`
+
 ## Menjalankan
 
 1. Jalankan [Arah Ride Backend Dev](https://github.com/alphadevthasa/arah-ride-backend-dev).
