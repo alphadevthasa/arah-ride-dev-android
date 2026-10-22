@@ -1,85 +1,85 @@
-# ArahRide — Android native
+# ArahRide — Native Android
 
-ArahRide berisi dua aplikasi Android dengan `applicationId` berbeda:
+ArahRide contains two Android apps with separate application IDs:
 
-- `:customer` → **Arah**, untuk membuat dan memantau pesanan.
-- `:driver` → **Arah Driver**, untuk online, menerima pesanan, menandai tiba, mulai, dan selesai.
-- `:core` → model, HTTP/WebSocket, peta MapLibre, dan panel UI bersama.
+- **:customer** → **Arah**, for creating and tracking orders.
+- **:driver** → **Arah Driver**, for going online, accepting orders, marking arrival, and starting and completing rides.
+- **:core** → shared models, HTTP/WebSocket communication, MapLibre maps, and UI panels.
 
-Peta native MapLibre ditempatkan di layout XML supaya komponen peta tetap berada di view system. Panel status dan tombol memakai Jetpack Compose. Data peta demo berasal dari OpenStreetMap melalui [OpenFreeMap](https://openfreemap.org/quick_start/); atribusi terlihat di bagian atas layar.
-Peta dapat diperbesar atau diperkecil dengan gestur cubit.
+The native MapLibre map is placed in an XML layout so it remains in the Android view system. Status panels and buttons use Jetpack Compose. Demo map data comes from OpenStreetMap through [OpenFreeMap](https://openfreemap.org/quick_start/); attribution is visible at the top of the screen.
+The map supports pinch-to-zoom gestures.
 
-Pratinjau: [tampilan Driver dengan ikon mobil](docs/live-car.png).
+Preview: [Driver screen with the car icon](docs/live-car.png).
 
-## Demo alur pemesanan
+## Booking flow demo
 
-GIF berikut merekam alur **Customer** (memilih titik jemput dan tujuan di peta, memesan, lalu mengikuti Driver hingga perjalanan berjalan) dan alur **Driver** (online, menerima pesanan, tiba, verifikasi PIN, menjalankan perjalanan) pada aplikasi Android Dev/Portfolio:
+The GIFs below show the **Customer** flow (selecting pickup and destination points on the map, placing an order, and tracking the Driver until the ride starts) and the **Driver** flow (going online, accepting an order, arriving, verifying a PIN, and starting the ride) in the Android Dev/Portfolio app:
 
 <table>
   <tr>
     <td align="center" valign="top" width="50%">
-      <img src="docs/arah-android-booking-flow.gif" width="300" alt="Alur Customer Android"><br>
-      <sub><b>Customer</b> — pesan &amp; pantau perjalanan</sub>
+      <img src="docs/arah-android-booking-flow.gif" width="300" alt="Android Customer flow"><br>
+      <sub><b>Customer</b> — book and track a ride</sub>
     </td>
     <td align="center" valign="top" width="50%">
-      <img src="docs/arah-driver-flow.gif" width="300" alt="Alur Driver Android"><br>
-      <sub><b>Driver</b> — online, terima pesanan, jalankan</sub>
+      <img src="docs/arah-driver-flow.gif" width="300" alt="Android Driver flow"><br>
+      <sub><b>Driver</b> — go online, accept a booking, and complete a ride</sub>
     </td>
   </tr>
 </table>
 
-## Versi Production
+## Production version
 
-Aplikasi **Production** punya alur lebih lengkap daripada Dev/Portfolio: login OTP (nomor telepon), pemilihan layanan (Motor/Mobil) dan metode pembayaran (tunai/non-tunai), estimasi tarif, pembayaran non-tunai, rating Driver, dan tip. Repo ini berisi versi **Dev/Portfolio**; berikut cuplikan aplikasi **Customer** dan **Driver Production** sebagai gambaran seperti apa versi Production:
+The **Production** app has a more complete flow than Dev/Portfolio: OTP login with a phone number, service selection (motorcycle/car) and payment method selection (cash/non-cash), fare estimates, non-cash payments, Driver ratings, and tips. This repository contains the **Dev/Portfolio** version. The clips below show the **Production Customer** and **Driver** apps for reference:
 
 <table>
   <tr>
     <td align="center" valign="top" width="50%">
-      <img src="docs/arah-production-flow.gif" width="300" alt="Production Customer Android"><br>
-      <sub><b>Customer Production</b> — order → perjalanan → bayar → tip</sub>
+      <img src="docs/arah-production-flow.gif" width="300" alt="Production Customer on Android"><br>
+      <sub><b>Production Customer</b> — order → ride → payment → tip</sub>
     </td>
     <td align="center" valign="top" width="50%">
-      <img src="docs/arah-production-driver-flow.gif" width="300" alt="Production Driver Android"><br>
-      <sub><b>Driver Production</b> — online → terima → tiba → PIN → perjalanan</sub>
+      <img src="docs/arah-production-driver-flow.gif" width="300" alt="Production Driver on Android"><br>
+      <sub><b>Production Driver</b> — online → accept → arrive → PIN → ride</sub>
     </td>
   </tr>
 </table>
 
 ## Tech stack
 
-- **Bahasa:** Kotlin
-- **UI:** Jetpack Compose (panel & header) + XML layout (host peta MapLibre)
-- **Peta:** MapLibre Native dengan tile OpenFreeMap (OpenStreetMap)
-- **Networking:** OkHttp — HTTP (REST) dan WebSocket untuk snapshot live
-- **Lokasi:** Android LocationManager + foreground service (Driver)
+- **Language:** Kotlin
+- **UI:** Jetpack Compose (panels and header) + XML layout (MapLibre map host)
+- **Maps:** MapLibre Native with OpenFreeMap tiles (OpenStreetMap)
+- **Networking:** OkHttp — HTTP (REST) and WebSocket for live snapshots
+- **Location:** Android LocationManager + foreground service (Driver)
 - **Build:** Gradle (Kotlin DSL), minSdk 26, targetSdk 35, JDK 17
-- **Modul:** `:core` (model, `RideClient`, panel UI), `:customer`, `:driver`
+- **Modules:** :core (models, RideClient, shared UI panels), :customer, :driver
 
-## Menjalankan
+## Getting started
 
-1. Jalankan [Arah Ride Backend Dev](https://github.com/alphadevthasa/arah-ride-backend-dev).
-2. Buka folder ini di Android Studio; jalankan `customer` dan `driver` pada emulator Android yang sama atau berbeda.
-3. Di Arah Driver, tekan **Mulai online** dan izinkan lokasi. Di Arah, pilih titik jemput dan tujuan dengan mengetuk peta, lalu pesan. Kembali ke Driver untuk menerima hingga selesai.
-4. Untuk build terminal: `./gradlew :customer:assembleDebug :driver:assembleDebug`.
+1. Run [Arah Ride Backend Dev](https://github.com/alphadevthasa/arah-ride-backend-dev).
+2. Open this folder in Android Studio. Run customer and driver on the same or separate Android emulators.
+3. In Arah Driver, tap **Go Online** and allow location access. In Arah, select pickup and destination points by tapping the map, then place an order. Return to Driver to accept and complete the ride.
+4. To build from the terminal: ./gradlew :customer:assembleDebug :driver:assembleDebug.
 
-Default API adalah `http://10.0.2.2:18080`, alamat host dari emulator Android. Untuk perangkat fisik, set URL yang bisa dijangkau perangkat:
+The default API URL is http://10.0.2.2:18080, the host address from the Android emulator. For physical devices, set a URL that the device can reach:
 
-```sh
+~~~sh
 ./gradlew :customer:assembleDebug :driver:assembleDebug \
-  -PAPI_BASE_URL=http://nama-mac.local:18080 \
+  -PAPI_BASE_URL=http://your-mac.local:18080 \
   -PMAP_STYLE_URL=https://tiles.openfreemap.org/styles/liberty
-```
+~~~
 
-Jika memakai perangkat fisik, server demo perlu `ARAH_ADDR=0.0.0.0:18080`. Hanya gunakan ini pada jaringan pengembangan yang dipercaya. Build release mematikan HTTP cleartext; gunakan endpoint HTTPS produksi.
+For physical devices, the demo server must use ARAH_ADDR=0.0.0.0:18080. Only use this on a trusted development network. Release builds disable cleartext HTTP; use an HTTPS endpoint.
 
-## Alur dan batas prototipe
+## Flow and prototype limitations
 
-Status: `requested → accepted → arrived → in_progress → completed`, dengan pembatalan Customer hanya sebelum perjalanan dimulai. Backend demo mengambil rute jalan dari OSRM, menyimpan geometri pada pesanan, dan kedua aplikasi menggambarnya sebagai polyline. Posisi Driver berasal dari LocationManager setiap 3 detik atau setelah bergerak 5 meter, dikirim ke backend, lalu diteruskan melalui WebSocket. Saat Driver menekan **Mulai perjalanan**, backend mengirim lokasi simulasi tiap 100 ms selama 16 detik mengikuti polyline; lokasi perangkat dijeda selama simulasi. Ikon mobil bergerak di sepanjang rute; tombol **Lihat posisi Driver** mengarahkan peta Customer ke lokasi terbaru. Layanan lokasi foreground dengan notifikasi menjaga pengiriman ketika aplikasi Driver Android berada di latar belakang.
+Ride status: requested → accepted → arrived → in_progress → completed, with Customer cancellation allowed only before the ride starts. The demo backend retrieves road routes from OSRM, stores the geometry with the order, and both apps render it as a polyline. Driver location comes from LocationManager every 3 seconds or after moving 5 meters, is sent to the backend, and is then relayed over WebSocket. When the Driver taps **Start Ride**, the backend sends simulated location updates every 100 ms for 16 seconds along the polyline; device location updates are paused during the simulation. The car icon moves along the route; the **View Driver Location** button moves the Customer map to the latest location. A foreground location service with a notification keeps sending updates while the Android Driver app is in the background.
 
-Server demo hanya mendukung satu Driver dan satu pesanan aktif, tanpa akun, pembayaran, tarif, dispatch multi-driver, navigasi jalan, atau penyimpanan persisten. Titik peta adalah koordinat; belum ada geocoding alamat atau estimasi rute. Sebelum rilis, tambahkan autentikasi, otorisasi per pesanan, database, penyebaran driver, APNs/FCM untuk penawaran saat app tidak aktif, dan endpoint HTTPS. Ganti penyedia tile demo dengan penyedia OSM ber-SLA atau tile server sendiri sesuai beban. Jangan arahkan aplikasi komersial ke server tile publik `tile.openstreetmap.org`.
+The demo server supports only one Driver and one active order, with no accounts, payments, fares, multi-Driver dispatch, road navigation, or persistent storage. Map points are coordinates; address geocoding and route estimates are not available in this version. Before release, add authentication, per-order authorization, a database, Driver distribution, APNs/FCM for offers when the app is inactive, and HTTPS endpoints. Replace the demo tile provider with an SLA-backed OSM provider or your own tile server based on expected load. Do not direct commercial apps to the public tile.openstreetmap.org server.
 
-## Hasil verifikasi pencarian tempat (2026-06-28)
+## Place search verification results (2026-06-28)
 
-- Otomatis: Android: `./gradlew :core:testDebugUnitTest :customer:assembleDebug :driver:assembleDebug` lulus (19 unit test).
-- Backend dengan Photon palsu lokal (`ARAH_GEOCODER_URL`): `/v1/places/search` dan `/v1/places/reverse` memetakan hasil dengan benar; kata kunci kosong → 400.
-- **Belum diverifikasi**: Photon publik (`photon.komoot.io`) tidak terjangkau dari mesin ini saat pengujian (backend mengembalikan 502 generik), sehingga pencarian alamat/POI Indonesia sungguhan dan ketersediaan produksi tidak teruji. Uji emulator/simulator end-to-end (pilih titik, buat pesanan, label di app Driver, tap peta) juga belum dijalankan.
+- Automated: Android: ./gradlew :core:testDebugUnitTest :customer:assembleDebug :driver:assembleDebug passed (19 unit tests).
+- With a local mock Photon server (ARAH_GEOCODER_URL), the backend mapped /v1/places/search and /v1/places/reverse results correctly; an empty query returned 400.
+- **Not verified:** The public Photon service (photon.komoot.io) was unreachable from this machine during testing (the backend returned a generic 502), so real Indonesian address/POI search and production availability were not tested. End-to-end emulator/simulator testing (select a point, create an order, show the label in the Driver app, and tap the map) has not been run.
